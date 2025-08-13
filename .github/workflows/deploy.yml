@@ -37,6 +37,9 @@ jobs:
             liquibase --version
           fi
 
+      - name: Verify Liquibase installation
+        run: liquibase --version
+
       # 4. Run Liquibase update
       - name: Deploy stored procedures via Liquibase
         env:
