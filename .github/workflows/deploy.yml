@@ -3,7 +3,7 @@ name: Deploy Stored Procedures (Liquibase) - Dev
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -27,15 +27,16 @@ jobs:
         run: |
           curl -LO https://github.com/liquibase/liquibase/releases/download/v4.33.0/liquibase-4.33.0.tar.gz
           tar -xzf liquibase-4.33.0.tar.gz
-          sudo mv liquibase /usr/local/bin/liquibase
+          sudo mv liquibase /opt/liquibase
+          sudo ln -s /opt/liquibase/liquibase /usr/local/bin/liquibase
           liquibase --version
 
       # 4. Run Liquibase update
       - name: Deploy stored procedures via Liquibase
         env:
-          LB_URL: jdbc:sqlserver://${{ secrets.DB_SERVER }};databaseName=${{ secrets.DB_NAME }};encrypt=false
-          LB_USERNAME: ${{ secrets.DB_USER }}
-          LB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          LB_URL: jdbc:sqlserver://localhost;databaseName=MyTestDB;encrypt=false
+          LB_USERNAME: YashGoyal
+          LB_PASSWORD: Yash@123
         run: |
           liquibase \
             --url="$LB_URL" \
