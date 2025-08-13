@@ -25,9 +25,13 @@ jobs:
       # 3. Install Liquibase CLI
       - name: Install Liquibase
         run: |
-          sudo apt-get update
-          sudo apt-get install -y liquibase
-          liquibase --version
+          if ! command -v liquibase &> /dev/null; then
+            echo "Liquibase not found, installing..."
+            curl -fsSL https://download.liquibase.com/liquibase/install-liquibase.sh | bash
+          else
+            echo "Liquibase is already installed:"
+            liquibase --version
+          fi
 
       # 4. Run Liquibase update
       - name: Deploy stored procedures via Liquibase
