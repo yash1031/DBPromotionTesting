@@ -91,14 +91,11 @@ jobs:
           LB_USERNAME: "YashGoyal"
           LB_PASSWORD: "Yash@123"
         run: |
-          echo "=== Running Liquibase 4.33.0 update ==="
-          $HOME/liquibase/liquibase \
-            --url="$LB_URL" \
-            --username="$LB_USERNAME" \
-            --password="$LB_PASSWORD" \
-            --driver=com.microsoft.sqlserver.jdbc.SQLServerDriver \
-            --changeLogFile=liquibase/dbchangelog.xml \
-            --classpath=$HOME/liquibase/lib/mssql-jdbc-12.4.2.jre11.jar \
-            --liquibase.hub.mode=off \
-            --log-level=INFO \
-            update
+          liquibase \
+          --url="$LB_URL" \
+          --username="$LB_USERNAME" \
+          --password="$LB_PASSWORD" \
+          --driver=com.microsoft.sqlserver.jdbc.SQLServerDriver \
+          --changelog-file=liquibase/dbchangelog.xml \  # Changed from changeLogFile
+          --hub-mode=off \                              # Changed from liquibase.hub.mode
+          update
