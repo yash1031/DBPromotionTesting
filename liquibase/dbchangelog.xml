@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+            http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.15.xsd">
+
+    <!-- DB agnostic changeset -->
+    <changeSet id="create_manager" author="YashGoyal">
+        <createTable tableName="Users">
+            <column name="UserID" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="FirstName" type="NVARCHAR(50)"/>
+            <column name="LastName" type="NVARCHAR(50)"/>
+            <column name="Email" type="NVARCHAR(100)"/>
+            <column name="HireDate" type="DATE"/>
+        </createTable>
+    </changeSet>
+
+    <!-- end DB agnostic changeset -->
+
+    <changeSet id="alter_employee" author="YashGoyal" >
+        <sqlFile path="schema/employee_add_fullname.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <changeSet id="create_table_employee_id" author="YashGoyal">
+        <sqlFile path="schema/employee.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <changeSet id="create_view_employee_id" author="YashGoyal" runOnChange="true">
+        <sqlFile path="schema/employee_view.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <changeSet id="create_storedProc" author="YashGoyal">
+        <sqlFile path="schema/storedProc.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <changeSet id="create_storedProc" author="YashGoyal" runOnChange="true">
+        <sqlFile path="user/user_management.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+    
+</databaseChangeLog>

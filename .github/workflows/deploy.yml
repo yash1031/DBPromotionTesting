@@ -1,0 +1,47 @@
+name: Deploy Stored Procedures (Liquibase) - Dev
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Install Java (required for Liquibase)
+      - name: Install Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      # 3. Install Liquibase CLI
+      - name: Install Liquibase
+        run: |
+          curl -LO https://github.com/liquibase/liquibase/releases/download/v4.33.0/liquibase-4.33.0.tar.gz
+          tar -xzf liquibase-4.33.0.tar.gz
+          sudo mv liquibase /usr/local/bin/liquibase
+          liquibase --version
+
+      # 4. Run Liquibase update
+      - name: Deploy stored procedures via Liquibase
+        env:
+          LB_URL: jdbc:sqlserver://${{ secrets.DB_SERVER }};databaseName=${{ secrets.DB_NAME }};encrypt=false
+          LB_USERNAME: ${{ secrets.DB_USER }}
+          LB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          liquibase \
+            --url="$LB_URL" \
+            --username="$LB_USERNAME" \
+            --password="$LB_PASSWORD" \
+            --driver=com.microsoft.sqlserver.jdbc.SQLServerDriver \
+            --changeLogFile=liquibase/dbchangelog.xml \
+            --liquibase.hub.mode=off \
+            update
