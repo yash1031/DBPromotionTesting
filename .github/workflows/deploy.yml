@@ -27,7 +27,11 @@ jobs:
         run: |
           if ! command -v liquibase &> /dev/null; then
             echo "Liquibase not found, installing..."
-            curl -fsSL https://download.liquibase.com/liquibase/install-liquibase.sh | bash
+            VERSION=4.33.0
+            curl -LO https://github.com/liquibase/liquibase/releases/download/v${VERSION}/liquibase-${VERSION}.tar.gz
+            mkdir -p $HOME/liquibase
+            tar -xzf liquibase-${VERSION}.tar.gz -C $HOME/liquibase --strip-components=1
+            echo "$HOME/liquibase" >> $GITHUB_PATH
           else
             echo "Liquibase is already installed:"
             liquibase --version
