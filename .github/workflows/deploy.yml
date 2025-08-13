@@ -25,20 +25,8 @@ jobs:
       # 3. Install Liquibase CLI
       - name: Install Liquibase
         run: |
-          if [ -d "liquibase-4.33.0" ] || [ -f "liquibase" ]; then
-            echo "Removing existing Liquibase directory or file..."
-            rm -rf liquibase-4.33.0 liquibase
-          fi
-
-          if [ -f "liquibase-4.33.0.tar.gz" ]; then
-            echo "Removing old Liquibase archive..."
-            rm -f liquibase-4.33.0.tar.gz
-          fi
-          
-          curl -LO https://github.com/liquibase/liquibase/releases/download/v4.33.0/liquibase-4.33.0.tar.gz
-          tar -xzf liquibase-4.33.0.tar.gz
-          sudo mv liquibase-4.33.0 /opt/liquibase
-          sudo ln -sf /opt/liquibase/liquibase /usr/local/bin/liquibase
+          sudo apt-get update
+          sudo apt-get install -y liquibase
           liquibase --version
 
       # 4. Run Liquibase update
