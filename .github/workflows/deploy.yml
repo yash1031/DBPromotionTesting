@@ -20,38 +20,85 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '17'  # Java 17 for better compatibility with 4.33.0
 
-      # 3. Install Liquibase CLI
-      - name: Install Liquibase
+      # 3. Install SQL Server JDBC Driver
+      - name: Download SQL Server JDBC Driver
         run: |
-          if ! command -v liquibase &> /dev/null; then
-            echo "Liquibase not found, installing..."
-            VERSION=4.33.0
-            curl -LO https://github.com/liquibase/liquibase/releases/download/v${VERSION}/liquibase-${VERSION}.tar.gz
-            mkdir -p $HOME/liquibase
-            tar -xzf liquibase-${VERSION}.tar.gz -C $HOME/liquibase --strip-components=1
-            echo "$HOME/liquibase" >> $GITHUB_PATH
+          mkdir -p $HOME/jdbc-drivers
+          cd $HOME/jdbc-drivers
+          wget https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.4.2.jre11/mssql-jdbc-12.4.2.jre11.jar
+          echo "JDBC_CLASSPATH=$HOME/jdbc-drivers/mssql-jdbc-12.4.2.jre11.jar" >> $GITHUB_ENV
+
+      # 4. Install Liquibase 4.33.0 (Fixed approach)
+      - name: Install Liquibase 4.33.0
+        run: |
+          VERSION=4.33.0
+          echo "Installing Liquibase version $VERSION"
+          
+          # Download and extract Liquibase 4.33.0
+          wget -q https://github.com/liquibase/liquibase/releases/download/v${VERSION}/liquibase-${VERSION}.tar.gz
+          mkdir -p $HOME/liquibase
+          tar -xzf liquibase-${VERSION}.tar.gz -C $HOME/liquibase
+          
+          # Add to PATH
+          echo "$HOME/liquibase" >> $GITHUB_PATH
+          
+          # Make executable
+          chmod +x $HOME/liquibase/liquibase
+          
+          # Copy JDBC driver to Liquibase lib directory
+          cp $HOME/jdbc-drivers/mssql-jdbc-12.4.2.jre11.jar $HOME/liquibase/lib/
+
+      # 5. Verify installations
+      - name: Verify Liquibase 4.33.0 installation
+        run: |
+          echo "=== PATH ==="
+          echo $PATH
+          echo ""
+          echo "=== Java version ==="
+          java -version
+          echo ""
+          echo "=== Liquibase installation ==="
+          ls -la $HOME/liquibase/
+          echo ""
+          echo "=== Liquibase version ==="
+          $HOME/liquibase/liquibase --version
+          echo ""
+          echo "=== JDBC Driver in lib ==="
+          ls -la $HOME/liquibase/lib/ | grep mssql
+
+      # 6. Validate changelog file
+      - name: Validate changelog file
+        run: |
+          echo "=== Checking changelog file ==="
+          if [ -f "liquibase/dbchangelog.xml" ]; then
+            echo "✅ Changelog file exists"
+            echo "File size: $(wc -c < liquibase/dbchangelog.xml) bytes"
+            echo "First 10 lines:"
+            head -10 liquibase/dbchangelog.xml
           else
-            echo "Liquibase is already installed:"
-            liquibase --version
+            echo "❌ ERROR: Changelog file not found!"
+            echo "Looking for XML files in project:"
+            find . -name "*.xml" -type f
+            exit 1
           fi
 
-      - name: Verify Liquibase installation
-        run: liquibase --version
-
-      # 4. Run Liquibase update
-      - name: Deploy stored procedures via Liquibase
+      # 7. Run Liquibase update with 4.33.0
+      - name: Deploy stored procedures via Liquibase 4.33.0
         env:
-          LB_URL: jdbc:sqlserver://localhost;databaseName=MyTestDB;encrypt=false
-          LB_USERNAME: YashGoyal
-          LB_PASSWORD: Yash@123
+          LB_URL: "jdbc:sqlserver://localhost;databaseName=MyTestDB;encrypt=false"
+          LB_USERNAME: "YashGoyal"
+          LB_PASSWORD: "Yash@123"
         run: |
-          liquibase \
+          echo "=== Running Liquibase 4.33.0 update ==="
+          $HOME/liquibase/liquibase \
             --url="$LB_URL" \
             --username="$LB_USERNAME" \
             --password="$LB_PASSWORD" \
             --driver=com.microsoft.sqlserver.jdbc.SQLServerDriver \
             --changeLogFile=liquibase/dbchangelog.xml \
+            --classpath=$HOME/liquibase/lib/mssql-jdbc-12.4.2.jre11.jar \
             --liquibase.hub.mode=off \
+            --log-level=INFO \
             update
